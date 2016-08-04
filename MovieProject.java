@@ -14,13 +14,13 @@ import org.json.*;
 
 public class MovieProject{
 
-	private int numMovies;
-	private String[] userDefinedMovies;
-	public static String[] movieJSONData;    // parallel
-	private double[] movieRatings;  // arrays
-	private String[] movieNames;
-	private Scanner myScanner;
-	private JFreeChart objChart;
+	private int numMovies;			//holds the number of movies to be compared 
+	private String[] userDefinedMovies;	//holds the names of movies, given by user
+	public static String[] movieJSONData;   //holds the JSON data associated with the movies the user has entered
+	private double[] movieRatings;          //holds the movie ratings once parsed from JSON received by OMDB
+	private String[] movieNames;		//holds the movie titles once parsed from JSON received by OMDB
+	private Scanner myScanner;		//used for user input. Will eventually be replaced by JFrame
+	private JFreeChart objChart;		//graph used to compare IMDB movie scores
 
 	MovieProject(){
 		numMovies = 0;
@@ -62,11 +62,11 @@ public class MovieProject{
 		
 		System.out.println("Please enter the name of the movie: ");
 		movieName = myScanner.nextLine();
-		movieName = myScanner.nextLine();
-		movieName = movieName.replace(" ", "+");
+		movieName = myScanner.nextLine();		//java.util.Scanner has issues with reading; necessitated extra .nextLine() call
+		movieName = movieName.replace(" ", "+");	//replacing spaces with "+" to add to the URL in HTTP GET request
 		userDefinedMovies[0] = movieName;
 		
-		for(int i = 1; i < numMovies; i++){
+		for(int i = 1; i < numMovies; i++){		//prompt user for movie names
 			System.out.println("Please enter the name of the movie: ");
 			movieName = myScanner.nextLine();
 			movieName = movieName.replaceAll(" ", "+");
@@ -76,34 +76,38 @@ public class MovieProject{
 
 
 	public void getUserMovieJSONData(){
-		
+		//HTTP GET request from OMDB
+		//receives JSON data, stores in movieJSONData array
 		for(int i = 0; i < numMovies; i++){
 			StringBuilder result = new StringBuilder();
-		    URL url;
+			URL url;
 			try {
-			  url = new URL("http://www.omdbapi.com/?t=" + userDefinedMovies[i] + "&y=&plot=short&r=json");
-		      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-		      conn.setRequestMethod("GET");
-		      BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-		      String line;
-		      while ((line = rd.readLine()) != null) {
-		         result.append(line);
-		      }
-		      rd.close();
-		      movieJSONData[i] = result.toString();
+			      url = new URL("http://www.omdbapi.com/?t=" + userDefinedMovies[i] + "&y=&plot=short&r=json");
+			      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			      conn.setRequestMethod("GET");
+			      BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			      String line;
+			      while ((line = rd.readLine()) != null) {
+			         result.append(line);
+			      }
+			      rd.close();
+			      movieJSONData[i] = result.toString();
 			}
-		 catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		 }
+			 catch (Exception e) {
+				// Catch all exceptions when HTTP GET request fails
+				System.out.println("Error during HTTP get request to OMDB");
+				e.printStackTrace();
+			 }
 		}
 		
 		
 	}
 
 	public void generateChart(){
+		//generates, populates, and displays the JFreeChart with movie data
+		
 		DefaultCategoryDataset objDataset = new DefaultCategoryDataset();
-		for(int i = 0; i < userDefinedMovies.length; i++){
+		for(int i = 0; i < userDefinedMovies.length; i++){			//add movie ratings and names to chart dataset
 			objDataset.addValue(movieRatings[i], "IMDB Score", movieNames[i]);
 		}
 		
@@ -124,6 +128,7 @@ public class MovieProject{
 	}
 	
 	public void parseData(){
+		//parses the JSON data and stores the movie ratings and names in each respective array
 		JSONObject movieInformation;
 		for(int i = 0; i < movieJSONData.length; i++){
 			try{
@@ -132,6 +137,7 @@ public class MovieProject{
 				movieNames[i] = movieInformation.getString("Title");
 			}
 			catch(Exception e){
+				//catch all errors when parsing JSON data
 				System.out.println("Error parsing JSON data.");
 				e.printStackTrace();
 			}
