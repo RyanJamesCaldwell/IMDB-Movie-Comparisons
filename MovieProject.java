@@ -13,7 +13,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.json.*;
 
 public class MovieProject{
-
+	//test comment edit
 	private int numMovies;			//holds the number of movies to be compared 
 	private String[] userDefinedMovies;	//holds the names of movies, given by user
 	public static String[] movieJSONData;   //holds the JSON data associated with the movies the user has entered
