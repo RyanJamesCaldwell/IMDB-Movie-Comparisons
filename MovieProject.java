@@ -1,27 +1,32 @@
 package movieProject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Scanner;
+
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartFrame;
+import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.json.*;
 
 public class MovieProject{
-	//test comment edit
-	private int numMovies;			//holds the number of movies to be compared 
-	private String[] userDefinedMovies;	//holds the names of movies, given by user
+
+	private int numMovies;					//holds the number of movies to be compared 
+	private String[] userDefinedMovies;		//holds the names of movies, given by user
 	public static String[] movieJSONData;   //holds the JSON data associated with the movies the user has entered
 	private double[] movieRatings;          //holds the movie ratings once parsed from JSON received by OMDB
-	private String[] movieNames;		//holds the movie titles once parsed from JSON received by OMDB
-	private Scanner myScanner;		//used for user input. Will eventually be replaced by JFrame
-	private JFreeChart objChart;		//graph used to compare IMDB movie scores
-
+	private String[] movieNames;			//holds the movie titles once parsed from JSON received by OMDB
+	private Scanner myScanner;				//used for user input. Will eventually be replaced by JFrame
+	private JFreeChart objChart;			//graph used to compare IMDB movie scores
+	final int MAX_NUM_MOVIES = 10;			//maximum number of movies to be compared
+	final int MIN_NUM_MOVIES = 1;			//minumum number of movies to be compared
+	
 	MovieProject(){
 		numMovies = 0;
 		myScanner = new Scanner(System.in);
@@ -35,7 +40,7 @@ public class MovieProject{
 
 
 	public void setNumMovies(int numMovies){
-		if(numMovies >= 1 && numMovies <= 10)
+		if(numMovies >= MIN_NUM_MOVIES && numMovies <= MAX_NUM_MOVIES)
 			this.numMovies = numMovies;
 		else
 			System.out.println("Number of movies must be >= 1 and <= 10.");
@@ -106,6 +111,9 @@ public class MovieProject{
 	public void generateChart(){
 		//generates, populates, and displays the JFreeChart with movie data
 		
+		int width = 640; /* Width of the image */
+	    int height = 480; /* Height of the image */
+		
 		DefaultCategoryDataset objDataset = new DefaultCategoryDataset();
 		for(int i = 0; i < userDefinedMovies.length; i++){			//add movie ratings and names to chart dataset
 			objDataset.addValue(movieRatings[i], "IMDB Score", movieNames[i]);
@@ -121,14 +129,19 @@ public class MovieProject{
 			    true,             // include tooltips?
 			    false             // include URLs?
 			);
-		
-		ChartFrame frame = new ChartFrame("IMDB Movie Ratings Comparison", objChart);
-		frame.pack();
-		frame.setVisible(true);
+	
+	    File barChart = new File(numMovies + "-Movie-Comparison.jpg"); 
+		try {
+			ChartUtilities.saveChartAsJPEG( barChart , objChart , width , height );
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("Error saving chart as .jpg");
+		}
 	}
 	
 	public void parseData(){
 		//parses the JSON data and stores the movie ratings and names in each respective array
+		
 		JSONObject movieInformation;
 		for(int i = 0; i < movieJSONData.length; i++){
 			try{
@@ -151,6 +164,5 @@ public class MovieProject{
 		newProject.getUserMovieJSONData();
 		newProject.parseData();
 		newProject.generateChart();
-		
 	}
 }
