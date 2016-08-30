@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Scanner;
-
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -55,6 +54,16 @@ public class MovieProject{
 	public void requestNumMovies(){
 		System.out.println("Enter how many movies you'd like to compare (1-10): ");
 		numMovies = myScanner.nextInt();
+		
+		if(numMovies > 10){
+			System.out.println("Only 10 movies are comparable at one time. Enter 10 movies.");
+			numMovies = 10;
+		}
+		else if(numMovies <= 0){
+			System.out.println("Number of movies must be 1-10. Enter 2 movies.");
+			numMovies = 2;
+		}
+		
 		userDefinedMovies = new String[numMovies];
 		movieJSONData = new String[numMovies];
 		movieRatings = new double[numMovies];
@@ -65,14 +74,14 @@ public class MovieProject{
 	public void requestMovieNames(){
 		String movieName;
 		
-		System.out.println("Please enter the name of the movie: ");
+		System.out.println("Please enter the name of movie 1: ");
 		movieName = myScanner.nextLine();
 		movieName = myScanner.nextLine();		//java.util.Scanner has issues with reading; necessitated extra .nextLine() call
 		movieName = movieName.replace(" ", "+");	//replacing spaces with "+" to add to the URL in HTTP GET request
 		userDefinedMovies[0] = movieName;
 		
 		for(int i = 1; i < numMovies; i++){		//prompt user for movie names
-			System.out.println("Please enter the name of the movie: ");
+			System.out.println("Please enter the name of movie " + (i+1) + ": ");
 			movieName = myScanner.nextLine();
 			movieName = movieName.replaceAll(" ", "+");
 			userDefinedMovies[i] = movieName;
@@ -83,6 +92,7 @@ public class MovieProject{
 	public void getUserMovieJSONData(){
 		//HTTP GET request from OMDB
 		//receives JSON data, stores in movieJSONData array
+		System.out.println("Retrieving movie data...");
 		for(int i = 0; i < numMovies; i++){
 			StringBuilder result = new StringBuilder();
 			URL url;
@@ -97,23 +107,24 @@ public class MovieProject{
 			      }
 			      rd.close();
 			      movieJSONData[i] = result.toString();
+			      System.out.println(result.toString());
 			}
 			 catch (Exception e) {
 				// Catch all exceptions when HTTP GET request fails
-				System.out.println("Error during HTTP get request to OMDB");
+				System.out.println("Error during HTTP GET request to OMDB");
 				e.printStackTrace();
 			 }
 		}
-		
-		
+		System.out.println("Done.");
 	}
 
 	public void generateChart(){
 		//generates, populates, and displays the JFreeChart with movie data
 		
-		int width = 640; /* Width of the image */
-	    int height = 480; /* Height of the image */
+		int width = 1000; //Width of the image
+	    int height = 600; //Height of the image
 		
+	    System.out.println("Generating bar chart...");
 		DefaultCategoryDataset objDataset = new DefaultCategoryDataset();
 		for(int i = 0; i < userDefinedMovies.length; i++){			//add movie ratings and names to chart dataset
 			objDataset.addValue(movieRatings[i], "IMDB Score", movieNames[i]);
@@ -126,9 +137,9 @@ public class MovieProject{
 			    objDataset,         //Chart Data 
 			    PlotOrientation.VERTICAL, // orientation
 			    false,             // include legend?
-			    true,             // include tooltips?
+			    false,             // include tooltips?
 			    false             // include URLs?
-			);
+		);
 	
 	    File barChart = new File(numMovies + "-Movie-Comparison.jpg"); 
 		try {
@@ -137,12 +148,14 @@ public class MovieProject{
 			e.printStackTrace();
 			System.out.println("Error saving chart as .jpg");
 		}
+		
+		System.out.println("Bar chart saved in current working directory.");
 	}
 	
 	public void parseData(){
 		//parses the JSON data and stores the movie ratings and names in each respective array
-		
 		JSONObject movieInformation;
+		
 		for(int i = 0; i < movieJSONData.length; i++){
 			try{
 				movieInformation = new JSONObject(movieJSONData[i]);
